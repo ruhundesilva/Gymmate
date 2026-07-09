@@ -50,9 +50,3 @@ the live database directly.
 supabase migration new <name>   # create a new migration
 supabase db push --linked       # apply pending migrations to the linked project
 ```
-
-## Docs
-
-Product spec, architecture, data model, and engineering rules live in `docs/` —
-start at `docs/00-index.md` for a map of what's where and when to read each file.
-Current sprint scope is in `sprints/`.
