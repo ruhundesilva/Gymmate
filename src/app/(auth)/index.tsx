@@ -106,14 +106,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   primaryButton: {
-    backgroundColor: "#3c87f7",
+    backgroundColor: "#2E86A6",
   },
   primaryButtonText: {
     color: "#ffffff",
   },
   secondaryButton: {
     borderWidth: 1,
-    borderColor: "#3c87f7",
+    borderColor: "#2E86A6",
   },
   appleButton: {
     height: 48,
