@@ -59,7 +59,7 @@ export default function SignUp() {
             We sent a confirmation link to {email}. Log in once you’ve confirmed.
           </ThemedText>
           <Link href="/(auth)/log-in" asChild>
-            <Pressable style={[styles.button, styles.primaryButton]}>
+            <Pressable style={StyleSheet.flatten([styles.button, styles.primaryButton])}>
               <ThemedText type="smallBold" style={styles.primaryButtonText}>
                 Go to log in
               </ThemedText>

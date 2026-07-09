@@ -49,7 +49,7 @@ export default function Welcome() {
 
         <ThemedView style={styles.actions}>
           <Link href="/(auth)/sign-up" asChild>
-            <Pressable style={[styles.button, styles.primaryButton]}>
+            <Pressable style={StyleSheet.flatten([styles.button, styles.primaryButton])}>
               <ThemedText type="smallBold" style={styles.primaryButtonText}>
                 Sign up
               </ThemedText>
@@ -57,7 +57,7 @@ export default function Welcome() {
           </Link>
 
           <Link href="/(auth)/log-in" asChild>
-            <Pressable style={[styles.button, styles.secondaryButton]}>
+            <Pressable style={StyleSheet.flatten([styles.button, styles.secondaryButton])}>
               <ThemedText type="smallBold">Log in</ThemedText>
             </Pressable>
           </Link>
