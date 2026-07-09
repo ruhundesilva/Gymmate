@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -17,6 +17,7 @@ import { useUsernameStatus } from "@/lib/use-username-status";
 
 export default function SignUp() {
   const theme = useTheme();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -73,6 +74,10 @@ export default function SignUp() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
+          <ThemedText type="link">‹ Back</ThemedText>
+        </Pressable>
+
         <ThemedText type="title">Sign up</ThemedText>
 
         <TextInput
@@ -154,6 +159,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.four,
     gap: Spacing.three,
+  },
+  backButton: {
+    alignSelf: "flex-start",
   },
   input: {
     height: 48,

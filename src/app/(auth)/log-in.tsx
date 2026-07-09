@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function LogIn() {
   const theme = useTheme();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -48,6 +49,10 @@ export default function LogIn() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
+          <ThemedText type="link">‹ Back</ThemedText>
+        </Pressable>
+
         <ThemedText type="title">Log in</ThemedText>
 
         <TextInput
@@ -116,6 +121,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.four,
     gap: Spacing.three,
+  },
+  backButton: {
+    alignSelf: "flex-start",
   },
   input: {
     height: 48,
