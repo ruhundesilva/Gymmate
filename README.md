@@ -1,31 +1,58 @@
-# Spotter Claude Code Kit — how this is organized and why
+# GymMates
 
-**Problem this solves:** CLAUDE.md is auto-loaded into EVERY Claude Code session.
-A monolithic spec there burns ~15k tokens per session before any work happens.
-This kit uses progressive disclosure: a ~55-line CLAUDE.md that is always loaded,
-plus topic files Claude Code reads only when a task needs them.
+An iOS gym workout tracker with cooperative workout scheduling — "Strava for the gym."
 
-## Layout
-- CLAUDE.md            — always loaded. Rules + commands + current-sprint pointer. KEEP UNDER ~80 LINES.
-- docs/00-index.md     — map of all topic files
-- docs/01..08          — the spec, split by topic (product, architecture, data model x2, API, auth, screens, risks)
-- docs/09..12          — engineering rules, condensed (security, testing, decisions, ops)
-- docs/BACKLOG.md      — scope-creep parking lot
-- sprints/sprint-N.md  — entry point per sprint: goal, deliverables, MINIMAL reading list, verify steps
+## Stack
 
-## Usage per sprint
-1. Edit the "Current sprint" line in CLAUDE.md.
-2. Open Claude Code: "Read sprints/sprint-N.md and ONLY the files it lists.
-   Propose a task plan in dependency order. Plan only."
-3. Approve → implement ONE task at a time → it runs verify → you review
-   (personally read every migration / security definer diff).
-4. /clear between unrelated tasks. Keep sessions single-purpose.
+- [Expo](https://expo.dev) (managed workflow) + TypeScript strict
+- [Expo Router](https://docs.expo.dev/router/introduction/) for file-based navigation
+- [Supabase](https://supabase.com) — Postgres, Auth, Row Level Security, Storage
+- `expo-secure-store` (Keychain) for session persistence
+- `expo-apple-authentication` for Sign in with Apple
 
-## Token habits that matter most
-- Reference paths, don't paste content into prompts.
-- One task per session where possible; /clear or /compact when context grows.
-- When Claude Code wants broad context, point it at docs/00-index.md, not the folder.
-- CLAUDE.md is a rules file, not a knowledge base — resist letting it grow.
+See `docs/02-architecture.md` for the full architecture and `docs/11-decisions.md`
+for settled stack decisions.
 
-Full-detail originals (spotter-spec.md, spotter-engineering-review.md) stay
-OUTSIDE the repo or in docs/archive/ — they're for humans; the split files are for the agent.
+## Setup
+
+```bash
+npm install
+cp .env.example .env   # fill in EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY
+```
+
+## Running the app
+
+Sign in with Apple is a native module, so the app needs a **dev-client** build —
+it will not run in the plain Expo Go app.
+
+```bash
+npm run ios       # builds and launches in the iOS Simulator
+npm run android    # builds and launches on an Android emulator
+```
+
+After the first native build, `npx expo start` reconnects to the already-installed
+dev client for fast-refreshing JS changes without rebuilding.
+
+## Development commands
+
+```bash
+npm run typecheck   # tsc --noEmit
+npm run lint        # expo lint
+npm test            # placeholder — no test suite yet
+```
+
+## Database
+
+Schema changes are Supabase migrations under `supabase/migrations/`. Never edit
+the live database directly.
+
+```bash
+supabase migration new <name>   # create a new migration
+supabase db push --linked       # apply pending migrations to the linked project
+```
+
+## Docs
+
+Product spec, architecture, data model, and engineering rules live in `docs/` —
+start at `docs/00-index.md` for a map of what's where and when to read each file.
+Current sprint scope is in `sprints/`.
