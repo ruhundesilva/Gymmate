@@ -14,12 +14,11 @@ export default function CompleteProfile() {
   const theme = useTheme();
   const { session, recheckProfile } = useAuth();
   const [username, setUsername] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const usernameStatus = useUsernameStatus(username);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = displayName.length > 0 && usernameStatus === "available";
+  const canSubmit = usernameStatus === "available";
 
   async function handleSave() {
     if (!session) return;
@@ -28,7 +27,7 @@ export default function CompleteProfile() {
     try {
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ username, display_name: displayName })
+        .update({ username })
         .eq("id", session.user.id);
       if (updateError) throw updateError;
       await recheckProfile();
@@ -44,7 +43,7 @@ export default function CompleteProfile() {
       <SafeAreaView style={styles.safeArea}>
         <ThemedText type="title">Finish your profile</ThemedText>
         <ThemedText themeColor="textSecondary">
-          Pick a username and display name to continue.
+          Pick a username to continue.
         </ThemedText>
 
         <TextInput
@@ -66,14 +65,6 @@ export default function CompleteProfile() {
             That username is taken.
           </ThemedText>
         )}
-
-        <TextInput
-          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Display name"
-          placeholderTextColor={theme.textSecondary}
-          value={displayName}
-          onChangeText={setDisplayName}
-        />
 
         {error && (
           <ThemedText type="small" themeColor="textSecondary">

@@ -22,7 +22,6 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const usernameStatus = useUsernameStatus(username);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +32,6 @@ export default function SignUp() {
     email.length > 0 &&
     password.length >= 6 &&
     passwordsMatch &&
-    displayName.length > 0 &&
     usernameStatus === "available";
 
   async function handleSignUp() {
@@ -43,7 +41,7 @@ export default function SignUp() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { username, display_name: displayName } },
+        options: { data: { username } },
       });
       if (signUpError) throw signUpError;
       if (!data.session) setCheckEmail(true);
@@ -112,13 +110,6 @@ export default function SignUp() {
           </ThemedText>
         )}
 
-        <TextInput
-          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Display name"
-          placeholderTextColor={theme.textSecondary}
-          value={displayName}
-          onChangeText={setDisplayName}
-        />
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
           placeholder="Password"

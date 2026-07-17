@@ -12,7 +12,6 @@ import { supabase } from "@/lib/supabase";
 
 type Profile = {
   username: string;
-  display_name: string;
   avatar_url: string | null;
 };
 
@@ -26,7 +25,7 @@ export default function ProfileScreen() {
     let cancelled = false;
     supabase
       .from("profiles")
-      .select("username, display_name, avatar_url")
+      .select("username, avatar_url")
       .eq("id", session.user.id)
       .single()
       .then(({ data }) => {
@@ -111,7 +110,7 @@ export default function ProfileScreen() {
               <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
             ) : (
               <ThemedView type="backgroundElement" style={styles.avatarPlaceholder}>
-                <ThemedText type="title">{profile.display_name.charAt(0).toUpperCase()}</ThemedText>
+                <ThemedText type="title">{profile.username.charAt(0).toUpperCase()}</ThemedText>
               </ThemedView>
             )}
             {uploading && (
@@ -121,8 +120,7 @@ export default function ProfileScreen() {
             )}
           </Pressable>
 
-          <ThemedText type="subtitle">{profile.display_name}</ThemedText>
-          <ThemedText themeColor="textSecondary">@{profile.username}</ThemedText>
+          <ThemedText type="subtitle">@{profile.username}</ThemedText>
         </ThemedView>
 
         <Pressable onPress={handleLogOut} style={styles.logoutButton}>
