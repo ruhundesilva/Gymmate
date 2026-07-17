@@ -83,15 +83,6 @@ export default function SignUp() {
 
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Email"
-          placeholderTextColor={theme.textSecondary}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
           placeholder="Username"
           placeholderTextColor={theme.textSecondary}
           autoCapitalize="none"
@@ -109,6 +100,15 @@ export default function SignUp() {
             That username is taken.
           </ThemedText>
         )}
+        <TextInput
+          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+          placeholder="Email"
+          placeholderTextColor={theme.textSecondary}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
 
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
