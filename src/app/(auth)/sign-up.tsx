@@ -20,6 +20,7 @@ export default function SignUp() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const usernameStatus = useUsernameStatus(username);
@@ -27,9 +28,11 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
 
+  const passwordsMatch = password === confirmPassword;
   const canSubmit =
     email.length > 0 &&
     password.length >= 6 &&
+    passwordsMatch &&
     displayName.length > 0 &&
     usernameStatus === "available";
 
@@ -91,14 +94,6 @@ export default function SignUp() {
         />
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Password"
-          placeholderTextColor={theme.textSecondary}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
           placeholder="Username"
           placeholderTextColor={theme.textSecondary}
           autoCapitalize="none"
@@ -124,6 +119,27 @@ export default function SignUp() {
           value={displayName}
           onChangeText={setDisplayName}
         />
+        <TextInput
+          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+          placeholder="Password"
+          placeholderTextColor={theme.textSecondary}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TextInput
+          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+          placeholder="Confirm password"
+          placeholderTextColor={theme.textSecondary}
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+        {confirmPassword.length > 0 && !passwordsMatch && (
+          <ThemedText type="small" themeColor="textSecondary">
+            Passwords don’t match.
+          </ThemedText>
+        )}
 
         {error && (
           <ThemedText type="small" themeColor="textSecondary">
