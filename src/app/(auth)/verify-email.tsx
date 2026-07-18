@@ -83,7 +83,7 @@ export default function VerifyEmail() {
 
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Code"
+          placeholder="123456"
           placeholderTextColor={theme.textSecondary}
           keyboardType="number-pad"
           value={code}
