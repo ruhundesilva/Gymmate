@@ -24,6 +24,14 @@ const REQUIREMENT_LABELS: Record<PasswordRequirement, string> = {
   notPersonal: "not your username or email",
 };
 
+// maxLength omitted: a 64-char ceiling isn't a meaningful thing to checklist for users.
+const PASSWORD_CHECKLIST: PasswordRequirement[] = [
+  "minLength",
+  "notCommon",
+  "notRepetitive",
+  "notPersonal",
+];
+
 export default function SignUp() {
   const theme = useTheme();
   const router = useRouter();
@@ -131,10 +139,21 @@ export default function SignUp() {
           value={password}
           onChangeText={setPassword}
         />
-        {password.length > 0 && failedRequirements.length > 0 && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Needs {failedRequirements.map((r) => REQUIREMENT_LABELS[r]).join(", ")}.
-          </ThemedText>
+        {password.length > 0 && (
+          <ThemedView style={styles.checklist}>
+            {PASSWORD_CHECKLIST.map((requirement) => {
+              const passed = !failedRequirements.includes(requirement);
+              return (
+                <ThemedText
+                  key={requirement}
+                  type="small"
+                  style={{ color: passed ? "#22C55E" : "#EF4444" }}
+                >
+                  {passed ? "✓" : "✗"} {REQUIREMENT_LABELS[requirement]}
+                </ThemedText>
+              );
+            })}
+          </ThemedView>
         )}
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
@@ -188,6 +207,9 @@ const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: "flex-start",
+  },
+  checklist: {
+    gap: Spacing.half,
   },
   input: {
     height: 48,
