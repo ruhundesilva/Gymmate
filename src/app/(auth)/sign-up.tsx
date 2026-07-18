@@ -12,8 +12,20 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+import { checkPassword, isPasswordStrong, type PasswordRequirement } from "@/lib/password";
 import { supabase } from "@/lib/supabase";
 import { useUsernameStatus } from "@/lib/use-username-status";
+
+const REQUIREMENT_LABELS: Record<PasswordRequirement, string> = {
+  minLength: "8+ characters",
+  maxLength: "under 64 characters",
+  upper: "an uppercase letter",
+  lower: "a lowercase letter",
+  number: "a number",
+  special: "a special character",
+  notCommon: "not a commonly used password",
+  notPersonal: "not your username or email",
+};
 
 export default function SignUp() {
   const theme = useTheme();
@@ -28,9 +40,10 @@ export default function SignUp() {
   const [checkEmail, setCheckEmail] = useState(false);
 
   const passwordsMatch = password === confirmPassword;
+  const failedRequirements = checkPassword(password, [username, email.split("@")[0]]);
   const canSubmit =
     email.length > 0 &&
-    password.length >= 6 &&
+    isPasswordStrong(password, [username, email.split("@")[0]]) &&
     passwordsMatch &&
     usernameStatus === "available";
 
@@ -86,6 +99,7 @@ export default function SignUp() {
           placeholder="Username"
           placeholderTextColor={theme.textSecondary}
           autoCapitalize="none"
+          textContentType="oneTimeCode"
           value={username}
           onChangeText={(text) => setUsername(text.toLowerCase())}
         />
@@ -106,6 +120,7 @@ export default function SignUp() {
           placeholderTextColor={theme.textSecondary}
           autoCapitalize="none"
           keyboardType="email-address"
+          textContentType="oneTimeCode"
           value={email}
           onChangeText={setEmail}
         />
@@ -115,14 +130,21 @@ export default function SignUp() {
           placeholder="Password"
           placeholderTextColor={theme.textSecondary}
           secureTextEntry
+          textContentType="oneTimeCode"
           value={password}
           onChangeText={setPassword}
         />
+        {password.length > 0 && failedRequirements.length > 0 && (
+          <ThemedText type="small" themeColor="textSecondary">
+            Needs {failedRequirements.map((r) => REQUIREMENT_LABELS[r]).join(", ")}.
+          </ThemedText>
+        )}
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
           placeholder="Confirm password"
           placeholderTextColor={theme.textSecondary}
           secureTextEntry
+          textContentType="oneTimeCode"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
         />
