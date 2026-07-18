@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,6 +9,19 @@ import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/lib/supabase";
 
+// Matches Supabase's SMTP "minimum interval per user" setting — the signup
+// email was just sent moments before this screen mounts, so start the
+// cooldown immediately instead of waiting for a rate-limit error to reveal it.
+const RESEND_COOLDOWN_SECONDS = 60;
+
+// GoTrue's rate-limit message: "For security purposes, you can only request
+// this after 46 seconds." Prefer the server's actual remaining time over our
+// local guess when it's available.
+function secondsFromRateLimitMessage(message: string): number | null {
+  const match = message.match(/(\d+)\s*seconds?/i);
+  return match ? Number(match[1]) : null;
+}
+
 export default function VerifyEmail() {
   const theme = useTheme();
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -16,6 +29,13 @@ export default function VerifyEmail() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+
+  useEffect(() => {
+    if (cooldown === 0) return;
+    const id = setTimeout(() => setCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
 
   async function handleVerify() {
     setError(null);
@@ -36,10 +56,16 @@ export default function VerifyEmail() {
   }
 
   async function handleResend() {
+    if (cooldown > 0) return;
     setError(null);
     const { error: resendError } = await supabase.auth.resend({ type: "signup", email });
-    if (resendError) setError(resendError.message);
-    else setResent(true);
+    if (resendError) {
+      setError(resendError.message);
+      setCooldown(secondsFromRateLimitMessage(resendError.message) ?? RESEND_COOLDOWN_SECONDS);
+    } else {
+      setResent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    }
   }
 
   return (
@@ -84,9 +110,13 @@ export default function VerifyEmail() {
           )}
         </Pressable>
 
-        <Pressable onPress={handleResend} disabled={resent}>
+        <Pressable onPress={handleResend} disabled={cooldown > 0}>
           <ThemedText type="link" themeColor="textSecondary">
-            {resent ? "Code resent — check your email" : "Didn't get a code? Resend"}
+            {cooldown > 0
+              ? `Resend available in ${cooldown}s`
+              : resent
+                ? "Code resent — check your email"
+                : "Didn't get a code? Resend"}
           </ThemedText>
         </Pressable>
       </SafeAreaView>
