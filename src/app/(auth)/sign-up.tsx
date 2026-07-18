@@ -19,11 +19,8 @@ import { useUsernameStatus } from "@/lib/use-username-status";
 const REQUIREMENT_LABELS: Record<PasswordRequirement, string> = {
   minLength: "8+ characters",
   maxLength: "under 64 characters",
-  upper: "an uppercase letter",
-  lower: "a lowercase letter",
-  number: "a number",
-  special: "a special character",
   notCommon: "not a commonly used password",
+  notRepetitive: "no repeated or sequential characters (e.g. aaaa, 1234)",
   notPersonal: "not your username or email",
 };
 
