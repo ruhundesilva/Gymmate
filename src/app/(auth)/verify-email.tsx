@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,6 +24,7 @@ function secondsFromRateLimitMessage(message: string): number | null {
 
 export default function VerifyEmail() {
   const theme = useTheme();
+  const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -71,17 +72,20 @@ export default function VerifyEmail() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
+          <ThemedText type="link">‹ Back</ThemedText>
+        </Pressable>
+
         <ThemedText type="title">Enter your code</ThemedText>
         <ThemedText themeColor="textSecondary">
-          We sent a 6-digit code to {email}.
+          We sent a confirmation code to {email}.
         </ThemedText>
 
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="123456"
+          placeholder="Code"
           placeholderTextColor={theme.textSecondary}
           keyboardType="number-pad"
-          maxLength={6}
           value={code}
           onChangeText={(text) => setCode(text.replace(/[^0-9]/g, ""))}
         />
@@ -93,12 +97,12 @@ export default function VerifyEmail() {
         )}
 
         <Pressable
-          disabled={code.length !== 6 || submitting}
+          disabled={code.length === 0 || submitting}
           onPress={handleVerify}
           style={[
             styles.button,
             styles.primaryButton,
-            (code.length !== 6 || submitting) && styles.buttonDisabled,
+            (code.length === 0 || submitting) && styles.buttonDisabled,
           ]}
         >
           {submitting ? (
@@ -130,6 +134,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.four,
     gap: Spacing.three,
+  },
+  backButton: {
+    alignSelf: "flex-start",
   },
   input: {
     height: 48,
