@@ -1,4 +1,4 @@
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { useState } from "react";
 import {
@@ -43,7 +43,6 @@ export default function SignUp() {
   const usernameStatus = useUsernameStatus(username);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [checkEmail, setCheckEmail] = useState(false);
 
   const passwordsMatch = password === confirmPassword;
   const failedRequirements = checkPassword(password, [username, email.split("@")[0]]);
@@ -63,32 +62,12 @@ export default function SignUp() {
         options: { data: { username }, emailRedirectTo: Linking.createURL("/") },
       });
       if (signUpError) throw signUpError;
-      if (!data.session) setCheckEmail(true);
+      if (!data.session) router.push({ pathname: "/(auth)/verify-email", params: { email } });
     } catch (err: any) {
       setError(err.message ?? String(err));
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (checkEmail) {
-    return (
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <ThemedText type="title">Check your email</ThemedText>
-          <ThemedText themeColor="textSecondary">
-            We sent a confirmation link to {email}. Log in once you’ve confirmed.
-          </ThemedText>
-          <Link href="/(auth)/log-in" asChild>
-            <Pressable style={StyleSheet.flatten([styles.button, styles.primaryButton])}>
-              <ThemedText type="smallBold" style={styles.primaryButtonText}>
-                Go to log in
-              </ThemedText>
-            </Pressable>
-          </Link>
-        </SafeAreaView>
-      </ThemedView>
-    );
   }
 
   return (

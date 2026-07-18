@@ -11,6 +11,7 @@ export default function AuthLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="sign-up" />
         <Stack.Screen name="log-in" />
+        <Stack.Screen name="verify-email" />
       </Stack.Protected>
       <Stack.Protected guard={!!session && needsProfileCompletion}>
         <Stack.Screen name="complete-profile" />
