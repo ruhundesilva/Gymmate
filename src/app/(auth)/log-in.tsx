@@ -1,4 +1,5 @@
 import { Link, useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -38,7 +39,9 @@ export default function LogIn() {
       Alert.alert("Enter your email first", "Type your email above, then tap Forgot password again.");
       return;
     }
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: Linking.createURL("/"),
+    });
     if (resetError) {
       Alert.alert("Couldn't send reset email", resetError.message);
     } else {

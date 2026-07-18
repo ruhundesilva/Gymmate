@@ -1,4 +1,5 @@
 import { Link, useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -59,7 +60,7 @@ export default function SignUp() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { username } },
+        options: { data: { username }, emailRedirectTo: Linking.createURL("/") },
       });
       if (signUpError) throw signUpError;
       if (!data.session) setCheckEmail(true);

@@ -18,6 +18,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE (not the default "implicit" flow) so a confirmation/reset deep
+    // link carries a `code` param we can hand to exchangeCodeForSession —
+    // there's no browser location bar on mobile to parse a token fragment from.
+    flowType: "pkce",
   },
 });
 

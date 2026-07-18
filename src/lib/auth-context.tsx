@@ -1,4 +1,5 @@
 import type { Session } from "@supabase/supabase-js";
+import * as Linking from "expo-linking";
 import {
   createContext,
   useCallback,
@@ -7,6 +8,7 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
+import { Alert } from "react-native";
 
 import { supabase } from "./supabase";
 
@@ -65,6 +67,25 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     return () => listener.subscription.unsubscribe();
   }, [checkProfile]);
+
+  // Email confirmation / password reset links deep-link back into the app
+  // (gymmates://) carrying a PKCE `code` param — exchange it for a session;
+  // onAuthStateChange above then picks up the resulting sign-in.
+  useEffect(() => {
+    function handleUrl(url: string) {
+      if (!url.includes("code=")) return;
+      supabase.auth.exchangeCodeForSession(url).catch(() => {
+        Alert.alert(
+          "Link expired",
+          "That link is no longer valid. Request a new confirmation or reset email and try again."
+        );
+      });
+    }
+
+    Linking.getInitialURL().then((url) => url && handleUrl(url));
+    const subscription = Linking.addEventListener("url", ({ url }) => handleUrl(url));
+    return () => subscription.remove();
+  }, []);
 
   const recheckProfile = useCallback(async () => {
     if (session) await checkProfile(session.user.id);
