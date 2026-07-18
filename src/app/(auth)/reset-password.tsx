@@ -1,52 +1,50 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  TextInput,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PasswordChecklist } from "@/components/password-checklist";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Spacing } from "@/constants/theme";
+import { useCountdown } from "@/hooks/use-countdown";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/lib/auth-context";
 import { isPasswordStrong } from "@/lib/password";
+import { RESEND_COOLDOWN_SECONDS, secondsFromRateLimitMessage } from "@/lib/resend-cooldown";
 import { supabase } from "@/lib/supabase";
-import { useUsernameStatus } from "@/lib/use-username-status";
 
-export default function SignUp() {
+export default function ResetPassword() {
   const theme = useTheme();
-  const router = useRouter();
-  const [email, setEmail] = useState("");
+  const { email } = useLocalSearchParams<{ email: string }>();
+  const { clearPasswordReset } = useAuth();
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [username, setUsername] = useState("");
-  const usernameStatus = useUsernameStatus(username);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
+  const [cooldown, setCooldown] = useCountdown(RESEND_COOLDOWN_SECONDS);
 
   const passwordsMatch = password === confirmPassword;
-  const personalInfo = [username, email.split("@")[0]];
-  const canSubmit =
-    email.length > 0 &&
-    isPasswordStrong(password, personalInfo) &&
-    passwordsMatch &&
-    usernameStatus === "available";
+  const personalInfo = [email.split("@")[0]];
+  const canSubmit = code.length > 0 && isPasswordStrong(password, personalInfo) && passwordsMatch;
 
-  async function handleSignUp() {
+  async function handleReset() {
     setError(null);
     setSubmitting(true);
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
-        password,
-        options: { data: { username } },
+        token: code,
+        type: "recovery",
       });
-      if (signUpError) throw signUpError;
-      if (!data.session) router.push({ pathname: "/(auth)/verify-email", params: { email } });
+      if (verifyError) throw verifyError;
+
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
+
+      clearPasswordReset();
     } catch (err: any) {
       setError(err.message ?? String(err));
     } finally {
@@ -54,49 +52,41 @@ export default function SignUp() {
     }
   }
 
+  async function handleResend() {
+    if (cooldown > 0) return;
+    setError(null);
+    // resend() only supports "signup" | "email_change" — recovery emails are
+    // re-sent by calling resetPasswordForEmail again.
+    const { error: resendError } = await supabase.auth.resetPasswordForEmail(email);
+    if (resendError) {
+      setError(resendError.message);
+      setCooldown(secondsFromRateLimitMessage(resendError.message) ?? RESEND_COOLDOWN_SECONDS);
+    } else {
+      setResent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    }
+  }
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
-          <ThemedText type="link">‹ Back</ThemedText>
-        </Pressable>
-
-        <ThemedText type="title">Sign up</ThemedText>
+        <ThemedText type="title">Reset your password</ThemedText>
+        <ThemedText themeColor="textSecondary">
+          Enter the code we sent to {email} and choose a new password.
+        </ThemedText>
 
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Username"
+          placeholder="123456"
           placeholderTextColor={theme.textSecondary}
-          autoCapitalize="none"
-          textContentType="oneTimeCode"
-          value={username}
-          onChangeText={(text) => setUsername(text.toLowerCase())}
-        />
-        {usernameStatus === "checking" && <ActivityIndicator />}
-        {usernameStatus === "invalid" && (
-          <ThemedText type="small" themeColor="textSecondary">
-            3-20 characters: lowercase letters, numbers, underscore.
-          </ThemedText>
-        )}
-        {usernameStatus === "taken" && (
-          <ThemedText type="small" themeColor="textSecondary">
-            That username is taken.
-          </ThemedText>
-        )}
-        <TextInput
-          style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Email"
-          placeholderTextColor={theme.textSecondary}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          textContentType="oneTimeCode"
-          value={email}
-          onChangeText={setEmail}
+          keyboardType="number-pad"
+          value={code}
+          onChangeText={(text) => setCode(text.replace(/[^0-9]/g, ""))}
         />
 
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Password"
+          placeholder="New password"
           placeholderTextColor={theme.textSecondary}
           secureTextEntry
           textContentType="oneTimeCode"
@@ -106,7 +96,7 @@ export default function SignUp() {
         <PasswordChecklist password={password} personalInfo={personalInfo} />
         <TextInput
           style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          placeholder="Confirm password"
+          placeholder="Confirm new password"
           placeholderTextColor={theme.textSecondary}
           secureTextEntry
           textContentType="oneTimeCode"
@@ -127,7 +117,7 @@ export default function SignUp() {
 
         <Pressable
           disabled={!canSubmit || submitting}
-          onPress={handleSignUp}
+          onPress={handleReset}
           style={[
             styles.button,
             styles.primaryButton,
@@ -138,9 +128,19 @@ export default function SignUp() {
             <ActivityIndicator color="#ffffff" />
           ) : (
             <ThemedText type="smallBold" style={styles.primaryButtonText}>
-              Sign up
+              Reset password
             </ThemedText>
           )}
+        </Pressable>
+
+        <Pressable onPress={handleResend} disabled={cooldown > 0}>
+          <ThemedText type="link" themeColor="textSecondary">
+            {cooldown > 0
+              ? `Resend available in ${cooldown}s`
+              : resent
+                ? "Code resent — check your email"
+                : "Didn't get a code? Resend"}
+          </ThemedText>
         </Pressable>
       </SafeAreaView>
     </ThemedView>
@@ -153,9 +153,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.four,
     gap: Spacing.three,
-  },
-  backButton: {
-    alignSelf: "flex-start",
   },
   input: {
     height: 48,

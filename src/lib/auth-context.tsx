@@ -1,5 +1,4 @@
 import type { Session } from "@supabase/supabase-js";
-import * as Linking from "expo-linking";
 import {
   createContext,
   useCallback,
@@ -8,7 +7,6 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
-import { Alert } from "react-native";
 
 import { supabase } from "./supabase";
 
@@ -20,20 +18,28 @@ type AuthContextValue = {
   session: Session | null;
   loading: boolean;
   needsProfileCompletion: boolean;
+  needsPasswordReset: boolean;
   recheckProfile: () => Promise<void>;
+  clearPasswordReset: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue>({
   session: null,
   loading: true,
   needsProfileCompletion: false,
+  needsPasswordReset: false,
   recheckProfile: async () => {},
+  clearPasswordReset: () => {},
 });
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
+  // Set when verifyOtp({ type: "recovery" }) establishes a session — without
+  // this, the router would treat that session as a normal sign-in and jump
+  // straight to the tabs before the user ever picks a new password.
+  const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
 
   const checkProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -54,13 +60,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
+      (event, newSession) => {
         setSession(newSession);
+        if (event === "PASSWORD_RECOVERY") setNeedsPasswordReset(true);
         if (newSession) {
           setLoading(true);
           checkProfile(newSession.user.id).finally(() => setLoading(false));
         } else {
           setNeedsProfileCompletion(false);
+          setNeedsPasswordReset(false);
         }
       }
     );
@@ -68,32 +76,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return () => listener.subscription.unsubscribe();
   }, [checkProfile]);
 
-  // Email confirmation / password reset links deep-link back into the app
-  // (gymmates://) carrying a PKCE `code` param — exchange it for a session;
-  // onAuthStateChange above then picks up the resulting sign-in.
-  useEffect(() => {
-    function handleUrl(url: string) {
-      if (!url.includes("code=")) return;
-      supabase.auth.exchangeCodeForSession(url).catch(() => {
-        Alert.alert(
-          "Link expired",
-          "That link is no longer valid. Request a new confirmation or reset email and try again."
-        );
-      });
-    }
-
-    Linking.getInitialURL().then((url) => url && handleUrl(url));
-    const subscription = Linking.addEventListener("url", ({ url }) => handleUrl(url));
-    return () => subscription.remove();
-  }, []);
-
   const recheckProfile = useCallback(async () => {
     if (session) await checkProfile(session.user.id);
   }, [session, checkProfile]);
 
+  const clearPasswordReset = useCallback(() => setNeedsPasswordReset(false), []);
+
   return (
     <AuthContext.Provider
-      value={{ session, loading, needsProfileCompletion, recheckProfile }}
+      value={{
+        session,
+        loading,
+        needsProfileCompletion,
+        needsPasswordReset,
+        recheckProfile,
+        clearPasswordReset,
+      }}
     >
       {children}
     </AuthContext.Provider>

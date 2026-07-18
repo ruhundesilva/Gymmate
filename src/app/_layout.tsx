@@ -8,7 +8,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-context";
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
-  const { session, loading, needsProfileCompletion } = useAuth();
+  const { session, loading, needsProfileCompletion, needsPasswordReset } = useAuth();
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
@@ -18,10 +18,10 @@ function RootNavigator() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!session || needsProfileCompletion}>
+      <Stack.Protected guard={!session || needsPasswordReset || needsProfileCompletion}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
-      <Stack.Protected guard={!!session && !needsProfileCompletion}>
+      <Stack.Protected guard={!!session && !needsPasswordReset && !needsProfileCompletion}>
         <Stack.Screen name="(tabs)" />
       </Stack.Protected>
     </Stack>
