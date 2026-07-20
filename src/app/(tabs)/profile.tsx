@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
@@ -40,7 +40,18 @@ export default function ProfileScreen() {
     if (!session) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission needed", "Allow photo library access to set an avatar.");
+      if (permission.canAskAgain) {
+        Alert.alert("Permission needed", "Allow photo library access to set an avatar.");
+      } else {
+        Alert.alert(
+          "Permission needed",
+          "Photo library access is off. Enable it in Settings to set an avatar.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() },
+          ],
+        );
+      }
       return;
     }
 
