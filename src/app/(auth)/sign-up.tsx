@@ -120,7 +120,7 @@ export default function SignUp() {
         )}
 
         {error && (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" themeColor="error">
             {error}
           </ThemedText>
         )}

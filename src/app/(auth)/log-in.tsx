@@ -80,7 +80,7 @@ export default function LogIn() {
         </Pressable>
 
         {error && (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" themeColor="error">
             {error}
           </ThemedText>
         )}

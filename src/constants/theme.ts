@@ -14,6 +14,7 @@ export const Colors = {
     backgroundElement: '#E6EFEE',
     backgroundSelected: '#D3E5E2',
     textSecondary: '#6E756D',
+    error: '#B3261E',
   },
   dark: {
     text: '#ffffff',
@@ -21,6 +22,7 @@ export const Colors = {
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
+    error: '#FF6B6B',
   },
 } as const;
 
