@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function ResetPassword() {
   const theme = useTheme();
+  const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const { clearPasswordReset } = useAuth();
   const [code, setCode] = useState("");
@@ -70,6 +71,10 @@ export default function ResetPassword() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
+          <ThemedText type="link">‹ Back</ThemedText>
+        </Pressable>
+
         <ThemedText type="title">Reset your password</ThemedText>
         <ThemedText themeColor="textSecondary">
           Enter the code we sent to {email} and choose a new password.
@@ -153,6 +158,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.four,
     gap: Spacing.three,
+  },
+  backButton: {
+    alignSelf: "flex-start",
   },
   input: {
     height: 48,
